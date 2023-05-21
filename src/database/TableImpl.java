@@ -5,14 +5,16 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class TableImpl implements Table{
+public class TableImpl implements Table {
 
     private static final String NULL_TEXT = "null";
     private static final String END_LINE = " |";
     private static final String SPACE = " ";
+    private static final int NON_NULL_COUNT_CELL_SIZE = 16;
     private final List<Column> columns;
     private final String tableName;
     private final Map<String, Integer> cellSizes;
+
     public TableImpl(List<Column> columns, String tableName) {
         validateColumnLengths(columns);
         this.columns = columns;
@@ -21,11 +23,11 @@ public class TableImpl implements Table{
     }
 
     private void validateColumnLengths(List<Column> columns) {
-        boolean hasSameLength =columns.stream()
+        boolean hasSameLength = columns.stream()
                 .map(Column::count)
                 .collect(Collectors.toSet())
                 .size() == 1;
-        if(!hasSameLength) {
+        if (!hasSameLength) {
             throw new IllegalArgumentException("columns have diff length");
         }
     }
@@ -38,7 +40,7 @@ public class TableImpl implements Table{
     private int findLongestLength(Column column) {
         int headerLength = column.getHeader().length();
         int longestCellLength = 0;
-        for(int i = 0; i < column.count(); i ++) {
+        for (int i = 0; i < column.count(); i++) {
             longestCellLength = Math.max(longestCellLength, column.getValue(i).length());
         }
         return Math.max(headerLength, longestCellLength);
@@ -73,16 +75,16 @@ public class TableImpl implements Table{
     public void show() {
         int tableRow = columns.get(0).count();
         showHeaders();
-        for(int i = 0; i < tableRow; i ++) {
-            for(Column column : columns) {
-                showNthCell(i,column);
+        for (int i = 0; i < tableRow; i++) {
+            for (Column column : columns) {
+                showNthCell(i, column);
             }
             System.out.println();
         }
     }
 
     private void showHeaders() {
-        for(Column column : columns) {
+        for (Column column : columns) {
             showCell(column.getHeader(), cellSizes.get(column.getHeader()));
         }
         System.out.println();
@@ -112,8 +114,48 @@ public class TableImpl implements Table{
 
     @Override
     public void describe() {
-        System.out.println(super.getClass()); // ???
-        System.out.println();
+        int entryCount = columns.get(0).count();
+        int columnCount = columns.size();
+        int columnCellSize = getLongestHeaderCellSize();
+        int indexCellSize = columnCount / 10;
+        System.out.println("<database.Table@" + this.hashCode() + ">");
+        System.out.println("Range Index: " + entryCount + " entries, 0 to " + (entryCount - 1));
+        System.out.println("Data Columns (total " + columnCount + " columns) :");
+        showDescribeHeader(indexCellSize, columnCellSize);
+        showDescribeValues(columnCount,indexCellSize, columnCellSize );
+
+    }
+
+    private int getLongestHeaderCellSize() {
+        int max = 0;
+        for(Map.Entry<String, Integer> cellSize : cellSizes.entrySet()) {
+            max = Math.max(max, cellSize.getValue());
+        }
+        return max;
+    }
+
+    private void showDescribeHeader(int indexCellSize, int columnCellSize) {
+        showCell("#", indexCellSize);
+        showCell("Column", columnCellSize);
+        showCell("Non-Null Count ", NON_NULL_COUNT_CELL_SIZE );
+        System.out.println(" Dtype");
+    }
+
+    private void showDescribeValues(int columnCount, int indexCellSize, int columnCellSize) {
+        for(int i = 0; i < columnCount; i++) {
+            showCell(String.valueOf(i), indexCellSize);
+            Column column = columns.get(i);
+            showCell(column.getHeader(), columnCellSize);
+            showCell(column.count() - column.getNullCount() + " non-null", NON_NULL_COUNT_CELL_SIZE);
+            System.out.println(getDataType(column));
+        }
+    }
+
+    private String getDataType(Column column) {
+        if(column.isNumericColumn()) {
+            return "int";
+        }
+        return "String";
     }
 
     @Override
