@@ -200,43 +200,72 @@ public class TableImpl implements Table {
 
     @Override
     public Table selectRows(int beginIndex, int endIndex) {
-        int indexCount;
         if (beginIndex < endIndex) {
-            indexCount = endIndex - beginIndex;
-            return new TableImpl(selectColumnsTopDown(beginIndex, indexCount));
+            return selectTopDown(beginIndex, endIndex);
         }
-        indexCount = beginIndex - endIndex;
-        return new TableImpl(selectColumnsBottomUp(beginIndex, indexCount));
+        return selectBottomUp(beginIndex, endIndex);
     }
 
-    private List<Column> selectColumnsTopDown(int beginIndex, int indexCount) {
-        List<Column> copyColumns = new ArrayList<>();
-        for (Column column : this.columns) {
-            List<String> copyValues = new ArrayList<>();
-            for (int i = beginIndex; i < indexCount; i++) {
-                copyValues.add(column.getValue(i));
-            }
-            copyColumns.add(new ColumnImpl(column.getHeader(), copyValues));
+    private Table selectTopDown(int beginIndex, int endIndex) {
+        Table table = selectOneRow(beginIndex);
+        for(int i = beginIndex + 1; i <= endIndex; i++) {
+            table = union(table, selectOneRow(i));
         }
-        return copyColumns;
+        return table;
     }
 
-    private List<Column> selectColumnsBottomUp(int beginIndex, int indexCount) {
-        List<Column> copyColumns = new ArrayList<>();
-        for (Column column : this.columns) {
-            List<String> copyValues = new ArrayList<>();
-            for (int i = 0; i < indexCount; i++) {
-                copyValues.add(column.getValue(beginIndex - i));
-            }
-            copyColumns.add(new ColumnImpl(column.getHeader(), copyValues));
+    private Table selectBottomUp(int beginIndex, int endIndex) {
+        Table table = selectOneRow(beginIndex);
+        for(int i = beginIndex - 1; i >= endIndex; i--) {
+            table = union(table, selectOneRow(i));
         }
-        return copyColumns;
+        return table;
     }
 
+    public Table selectOneRow(int index) {
+        List<Column> copyColumns = columns.stream()
+                .map(column -> new ColumnImpl(column.getHeader(), List.of(column.getValue(index))))
+                .collect(Collectors.toList());
+        return new TableImpl(copyColumns);
+    }
+
+    public Table union(Table one, Table another) {
+        validateSameColumnSize(one, another);
+        List<Column> newColumns = new ArrayList<>();
+        for (int i = 0; i < one.getColumnCount(); i++) {
+            Column oneColumn = one.getColumn(i);
+            String header = oneColumn.getHeader();
+            Column anoterColumn = another.getColumn(header);
+            Column concatColumn = concatColumn(oneColumn, anoterColumn);
+            newColumns.add(concatColumn);
+        }
+        return new TableImpl(newColumns);
+    }
+
+    public Column concatColumn(Column one, Column another) {
+        List<String> copyValues = new ArrayList<>();
+        for (int i = 0; i < one.count(); i++) {
+            copyValues.add(one.getValue(i));
+        }
+        for(int i = 0; i < another.count(); i++) {
+            copyValues.add(another.getValue(i));
+        }
+        return new ColumnImpl(one.getHeader(), copyValues);
+    }
+
+    private void validateSameColumnSize(Table one, Table another) {
+        if (one.getColumnCount() != another.getColumnCount()) {
+            throw new IllegalArgumentException("can't union, columns size diff");
+        }
+    }
 
     @Override
     public Table selectRowsAt(int... indices) {
-        return null;
+        Table newTable = selectOneRow(indices[0]);
+        for(int i = 1; i < indices.length; i ++) {
+            newTable = union(newTable, selectOneRow(indices[i]));
+        }
+        return newTable;
     }
 
     @Override
@@ -261,22 +290,25 @@ public class TableImpl implements Table {
 
     @Override
     public int getRowCount() {
-        return 0;
+        return entrySize;
     }
 
     @Override
     public int getColumnCount() {
-        return 0;
+        return columns.size();
     }
 
     @Override
     public Column getColumn(int index) {
-        return null;
+        return this.columns.get(index);
     }
 
     @Override
     public Column getColumn(String name) {
-        return null;
+        return columns.stream()
+                .filter(column -> column.getHeader().equals(name))
+                .findAny()
+                .orElseThrow(()->new IllegalArgumentException("can't find column"));
     }
 
     @Override
