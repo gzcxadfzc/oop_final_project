@@ -16,12 +16,14 @@ public class TableImpl implements Table {
     private final List<Column> columns;
     private final Map<String, Integer> cellSizes;
     private final int entrySize;
+    private final int numericColumnCount;
 
     public TableImpl(List<Column> columns) {
         validateColumnLengths(columns);
         this.columns = columns;
         this.cellSizes = initCellSizes(columns);
         this.entrySize = columns.get(0).count();
+        this.numericColumnCount = getNumericColumnCount(columns);
     }
 
     private void validateColumnLengths(List<Column> columns) {
@@ -46,6 +48,13 @@ public class TableImpl implements Table {
             longestCellLength = Math.max(longestCellLength, column.getValue(i).length());
         }
         return Math.max(headerLength, longestCellLength);
+    }
+
+    private int getNumericColumnCount(List<Column> columns) {
+        return (int) columns.stream()
+                .map(Column::isNumericColumn)
+                .filter(isNumeric -> isNumeric)
+                .count();
     }
 
     @Override
@@ -120,12 +129,13 @@ public class TableImpl implements Table {
         int columnCount = columns.size();
         int columnCellSize = getLongestHeaderCellSize();
         int indexCellSize = columnCount / 10;
-        System.out.println("<database.Table@" + this.hashCode() + ">");
+        System.out.println(this);
+        System.out.println(this.hashCode());
         System.out.println("Range Index: " + entryCount + " entries, 0 to " + (entryCount - 1));
         System.out.println("Data Columns (total " + columnCount + " columns) :");
         showDescribeHeader(indexCellSize, columnCellSize);
         showDescribeValues(columnCount, indexCellSize, columnCellSize);
-
+        showDtypes();
     }
 
     private int getLongestHeaderCellSize() {
@@ -158,6 +168,11 @@ public class TableImpl implements Table {
             return "int";
         }
         return "String";
+    }
+
+    private void showDtypes() {
+        String builder = "dtypes: int(" + numericColumnCount + "), String(" + (columns.size() - numericColumnCount) + ")";
+        System.out.println(builder);
     }
 
     @Override
@@ -262,5 +277,10 @@ public class TableImpl implements Table {
     @Override
     public Column getColumn(String name) {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return "<database.table@" + Integer.toHexString(hashCode()) + ">";
     }
 }
