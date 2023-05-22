@@ -1,5 +1,6 @@
 package database;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -11,15 +12,16 @@ public class TableImpl implements Table {
     private static final String END_LINE = " |";
     private static final String SPACE = " ";
     private static final int NON_NULL_COUNT_CELL_SIZE = 16;
+    private static final int DEFAULT_ROW_SIZE = 5;
     private final List<Column> columns;
-    private final String tableName;
     private final Map<String, Integer> cellSizes;
+    private final int entrySize;
 
-    public TableImpl(List<Column> columns, String tableName) {
+    public TableImpl(List<Column> columns) {
         validateColumnLengths(columns);
         this.columns = columns;
-        this.tableName = tableName;
         this.cellSizes = initCellSizes(columns);
+        this.entrySize = columns.get(0).count();
     }
 
     private void validateColumnLengths(List<Column> columns) {
@@ -122,13 +124,13 @@ public class TableImpl implements Table {
         System.out.println("Range Index: " + entryCount + " entries, 0 to " + (entryCount - 1));
         System.out.println("Data Columns (total " + columnCount + " columns) :");
         showDescribeHeader(indexCellSize, columnCellSize);
-        showDescribeValues(columnCount,indexCellSize, columnCellSize );
+        showDescribeValues(columnCount, indexCellSize, columnCellSize);
 
     }
 
     private int getLongestHeaderCellSize() {
         int max = 0;
-        for(Map.Entry<String, Integer> cellSize : cellSizes.entrySet()) {
+        for (Map.Entry<String, Integer> cellSize : cellSizes.entrySet()) {
             max = Math.max(max, cellSize.getValue());
         }
         return max;
@@ -137,12 +139,12 @@ public class TableImpl implements Table {
     private void showDescribeHeader(int indexCellSize, int columnCellSize) {
         showCell("#", indexCellSize);
         showCell("Column", columnCellSize);
-        showCell("Non-Null Count ", NON_NULL_COUNT_CELL_SIZE );
+        showCell("Non-Null Count ", NON_NULL_COUNT_CELL_SIZE);
         System.out.println(" Dtype");
     }
 
     private void showDescribeValues(int columnCount, int indexCellSize, int columnCellSize) {
-        for(int i = 0; i < columnCount; i++) {
+        for (int i = 0; i < columnCount; i++) {
             showCell(String.valueOf(i), indexCellSize);
             Column column = columns.get(i);
             showCell(column.getHeader(), columnCellSize);
@@ -152,7 +154,7 @@ public class TableImpl implements Table {
     }
 
     private String getDataType(Column column) {
-        if(column.isNumericColumn()) {
+        if (column.isNumericColumn()) {
             return "int";
         }
         return "String";
@@ -160,28 +162,62 @@ public class TableImpl implements Table {
 
     @Override
     public Table head() {
-        return null;
+        int lineCount = Math.min(columns.size(), DEFAULT_ROW_SIZE);
+        return selectRows(0, lineCount);
     }
 
     @Override
     public Table head(int lineCount) {
-        return null;
+        return selectRows(0, lineCount);
     }
 
     @Override
     public Table tail() {
-        return null;
+        int lastIndex = entrySize - 1;
+        return selectRows(lastIndex, lastIndex - DEFAULT_ROW_SIZE);
     }
 
     @Override
     public Table tail(int lineCount) {
-        return null;
+        int lastIndex = entrySize - 1;
+        return selectRows(lastIndex, lastIndex - lineCount);
     }
 
     @Override
     public Table selectRows(int beginIndex, int endIndex) {
-        return null;
+        int indexCount;
+        if (beginIndex < endIndex) {
+            indexCount = endIndex - beginIndex;
+            return new TableImpl(selectColumnsTopDown(beginIndex, indexCount));
+        }
+        indexCount = beginIndex - endIndex;
+        return new TableImpl(selectColumnsBottomUp(beginIndex, indexCount));
     }
+
+    private List<Column> selectColumnsTopDown(int beginIndex, int indexCount) {
+        List<Column> copyColumns = new ArrayList<>();
+        for (Column column : this.columns) {
+            List<String> copyValues = new ArrayList<>();
+            for (int i = beginIndex; i < indexCount; i++) {
+                copyValues.add(column.getValue(i));
+            }
+            copyColumns.add(new ColumnImpl(column.getHeader(), copyValues));
+        }
+        return copyColumns;
+    }
+
+    private List<Column> selectColumnsBottomUp(int beginIndex, int indexCount) {
+        List<Column> copyColumns = new ArrayList<>();
+        for (Column column : this.columns) {
+            List<String> copyValues = new ArrayList<>();
+            for (int i = 0; i < indexCount; i++) {
+                copyValues.add(column.getValue(beginIndex - i));
+            }
+            copyColumns.add(new ColumnImpl(column.getHeader(), copyValues));
+        }
+        return copyColumns;
+    }
+
 
     @Override
     public Table selectRowsAt(int... indices) {
@@ -226,10 +262,5 @@ public class TableImpl implements Table {
     @Override
     public Column getColumn(String name) {
         return null;
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
     }
 }

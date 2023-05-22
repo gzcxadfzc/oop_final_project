@@ -5,11 +5,12 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 class TableImplTest {
+    private final Column column = new ColumnImpl("id", List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"));
+    private final Column column2 = new ColumnImpl("header2", List.of("1", "", "3", "4", "5", "6", "7", "8", "9", "10"));
+    private final Column column3 = new ColumnImpl("header3", List.of("1", "2.1", "3", "4", "5", "6", "7", "8", "9", "10"));
+    private final Column column4 = new ColumnImpl("header4", List.of("1", "", "a", "b", "5", "6", "7", "8", "9", "10"));
+    private final Column column5 = new ColumnImpl("header", List.of("1", "", "3", "2.0", "5", "6", "7", "8", "9", "10"));
 
-    @Test
-    void tlqkf() {
-
-    }
     @Test
     void crossJoin() {
     }
@@ -32,38 +33,38 @@ class TableImplTest {
 
     @Test
     void show() {
-        Column column = new ColumnImpl("header1", List.of("1000000","2","3","4"));
-        Column column2 = new ColumnImpl("header2", List.of("1","","3","4"));
-        TableImpl table = new TableImpl(List.of(column, column2), "table");
+        TableImpl table = new TableImpl(List.of(column, column2));
         table.show();
     }
 
     @Test
     void describe() {
-        Column column = new ColumnImpl("hr1", List.of("1000000","2","3","4"));
-        Column column2 = new ColumnImpl("header2", List.of("1","","3","4"));
-        Column column3 = new ColumnImpl("header3", List.of("1","2.1","3","4"));
-        Column column4 = new ColumnImpl("header4", List.of("1","","3","4"));
-        Column column5 = new ColumnImpl("header", List.of("1","","3","4"));
-
-        Table table = new TableImpl(List.of(column, column2, column3, column4, column5), "table");
+        Table table = new TableImpl(List.of(column, column2, column3, column4, column5));
         table.describe();
     }
 
     @Test
     void head() {
+        Table table = new TableImpl(List.of(column, column2, column3, column4, column5));
+        table.head().show();
     }
 
     @Test
-    void testHead() {
+    void head2() {
+        Table table = new TableImpl(List.of(column, column2, column3, column4, column5));
+        table.head(2).show();
     }
 
     @Test
     void tail() {
+        Table table = new TableImpl(List.of(column, column2, column3, column4, column5));
+        table.tail().show();
     }
 
     @Test
-    void testTail() {
+    void tail2() {
+        Table table = new TableImpl(List.of(column, column2, column3, column4, column5));
+        table.tail(2).show();
     }
 
     @Test
