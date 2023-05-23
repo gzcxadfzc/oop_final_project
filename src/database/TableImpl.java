@@ -15,11 +15,13 @@ public class TableImpl implements Table {
     private static final int DEFAULT_ROW_SIZE = 5;
     private final List<Column> columns;
     private final Map<String, Integer> cellSizes;
+    private final String tableName;
     private final int entrySize;
     private final int numericColumnCount;
 
-    public TableImpl(List<Column> columns) {
+    public TableImpl(String tableName, List<Column> columns) {
         validateColumnLengths(columns);
+        this.tableName = tableName;
         this.columns = columns;
         this.cellSizes = initCellSizes(columns);
         this.entrySize = columns.get(0).count();
@@ -79,7 +81,7 @@ public class TableImpl implements Table {
 
     @Override
     public String getName() {
-        return null;
+        return this.tableName;
     }
 
     @Override
@@ -226,7 +228,7 @@ public class TableImpl implements Table {
         List<Column> copyColumns = columns.stream()
                 .map(column -> new ColumnImpl(column.getHeader(), List.of(column.getValue(index))))
                 .collect(Collectors.toList());
-        return new TableImpl(copyColumns);
+        return new TableImpl(this.getName(), copyColumns);
     }
 
     public Table union(Table one, Table another) {
@@ -239,7 +241,7 @@ public class TableImpl implements Table {
             Column concatColumn = concatColumn(oneColumn, anoterColumn);
             newColumns.add(concatColumn);
         }
-        return new TableImpl(newColumns);
+        return new TableImpl(one.getName(), newColumns);
     }
 
     public Column concatColumn(Column one, Column another) {
