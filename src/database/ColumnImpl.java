@@ -9,30 +9,17 @@ class ColumnImpl implements Column {
     private static final String START_LINE = "| ";
     private static final String END_LINE = " |";
     private static final String SPACE = " ";
-    private static final String NUMERIC_REGEX = "[+-]?(\\d*[.])?\\d+";
     private static final String INTEGER_REGEX = "[+-]?\\d+";
     private final String header;
     private final boolean isNumeric;
     private List<String> data;
-    private String type;
     private int cellSize;
 
     public ColumnImpl(String header, List<String> data) {
         this.header = header;
         this.data = data;
-        this.isNumeric = isAllNumeric(data);
-        this.type = checkColumnType();
+        this.isNumeric = isAllInteger(data);
         this.cellSize = findLongestLength();
-    }
-
-    private String checkColumnType() {
-        if(isAllInteger(data)) {
-            return "Integer";
-        }
-        if(isAllNumeric(data)) {
-            return "Float";
-        }
-        return "String";
     }
 
     private int findLongestLength() {
@@ -42,13 +29,6 @@ class ColumnImpl implements Column {
                 .max()
                 .orElse(0);
         return Math.max(maxDataLength, header.length());
-    }
-
-    private boolean isAllNumeric(List<String> data) {
-        int numericCount = (int) data.stream()
-                .filter(value -> value.matches(NUMERIC_REGEX))
-                .count();
-        return numericCount == data.size();
     }
 
     private boolean isAllInteger(List<String> data) {
@@ -66,10 +46,6 @@ class ColumnImpl implements Column {
     @Override
     public String getValue(int index) {
         return data.get(index);
-    }
-
-    public String getType() {
-        return type;
     }
 
     @Override

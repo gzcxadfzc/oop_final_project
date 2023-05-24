@@ -22,9 +22,8 @@ class ColumnImplTest {
     @Test
     void getHeader() {
         Column column = new ColumnImpl(TEST_NAME, NULL_DATA);
-        String expected = TEST_NAME;
         String actual = column.getHeader();
-        assertEquals(expected, actual);
+        assertEquals(TEST_NAME, actual);
     }
 
     @Test
@@ -73,15 +72,15 @@ class ColumnImplTest {
 
     @Test
     void isNumericColumn() {
-        Column numericColumn = new ColumnImpl(TEST_NAME, NUMERIC_DATA);
+        Column numericColumn = new ColumnImpl(TEST_NAME, INTEGER_DATA);
         boolean actual = numericColumn.isNumericColumn();
-        assertEquals(true, actual);
+        assertTrue(actual);
     }
 
     @Test
     void getNullCount() {
         Column column = new ColumnImpl(TEST_NAME, NULL_DATA);
-        long expected = 2l;
+        long expected = 2L;
         long actual = column.getNullCount();
         assertEquals(expected,actual);
     }
