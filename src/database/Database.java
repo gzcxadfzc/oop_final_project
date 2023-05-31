@@ -1,10 +1,8 @@
 package database;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Database {
     // 테이블명이 같으면 같은 테이블로 간주된다.
@@ -26,17 +24,45 @@ public class Database {
      *            String 타입의 데이터는 ("), ('), (,)는 포함하지 않는 것으로 가정한다.
      */
     public static void createTable(File csv) throws FileNotFoundException {
+        FileReader reader = new FileReader(csv);
+        try {
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            String delimiter = ",";
+            String line;
+            List<List<String>> data = new ArrayList<>();
+            while((line = bufferedReader.readLine()) != null) {
+                String[] values = line.split(delimiter,-1);
+                if(data.isEmpty()) {
+                    for(int i = 0; i < values.length; i ++) {
+                        data.add(new ArrayList<>());
+                    }
+                }
+                for (int i = 0; i < values.length; i++) {
+                    data.get(i).add(values[i]);
+                }
+            }
+            List<Column> columns = data.stream()
+                    .map(value -> new ColumnImpl(value.get(0), value.subList(1, value.size())))
+                    .collect(Collectors.toList());
+            tables.add(new TableImpl(csv.getName(), columns));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
 
+        }
     }
 
     // tableName과 테이블명이 같은 테이블을 리턴한다. 없으면 null 리턴.
     public static Table getTable(String tableName) {
-        return null;
+        return tables.stream()
+                .filter(table -> table.getName().equals(tableName))
+                .findAny()
+                .orElse(null);
     }
 
     /**
-     * @return 정렬된 새로운 Table 객체를 반환한다. 즉, 첫 번째 매개변수 Table은 변경되지 않는다.
      * @param byIndexOfColumn 정렬 기준 컬럼, 존재하지 않는 컬럼 인덱스 전달시 예외 발생시켜도 됨.
+     * @return 정렬된 새로운 Table 객체를 반환한다. 즉, 첫 번째 매개변수 Table은 변경되지 않는다.
      */
     public static Table sort(Table table, int byIndexOfColumn, boolean isAscending, boolean isNullFirst) {
         return null;
