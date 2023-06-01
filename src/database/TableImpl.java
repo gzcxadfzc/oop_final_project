@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TableImpl implements Table {
 
@@ -61,7 +62,45 @@ public class TableImpl implements Table {
 
     @Override
     public Table crossJoin(Table rightTable) {
-        return null;
+        List<Column> newColumns = new ArrayList<>();
+        //left table column
+        for (Column column : this.columns) {
+            String newHeader = tableName + "." + column.getHeader();
+            List<String> newColumnValues = new ArrayList<>();
+            for (int i = 0; i < column.count(); i++) {
+                for (int j = 0; j < rightTable.getRowCount(); j++) {
+                    newColumnValues.add(column.getValue(i));
+                }
+            }
+            newColumns.add(new ColumnImpl(newHeader, newColumnValues));
+        }
+        //right table column
+        List<Column> rightTableColumns = copyAnotherTableColumns(rightTable);
+        for (Column column : rightTableColumns) {
+            String newHeader = rightTable.getName() + "." + column.getHeader();
+            Column newColumn = new ColumnImpl(newHeader, copyColumnValues(column));
+            for (int i = 1; i < this.getRowCount(); i++) {
+                newColumn = concatColumn(newHeader, newColumn, column);
+            }
+            newColumns.add(newColumn);
+        }
+        return new TableImpl(this.tableName + rightTable.getName(), newColumns);
+    }
+
+    List<Column> copyAnotherTableColumns(Table another) {
+        List<Column> copyColumns = new ArrayList<>();
+        for (int i = 0; i < another.getColumnCount(); i++) {
+            copyColumns.add(another.getColumn(i));
+        }
+        return copyColumns;
+    }
+
+    List<String> copyColumnValues(Column column) {
+        List<String> copyValues = new ArrayList<>();
+        for (int i = 0; i < column.count(); i++) {
+            copyValues.add(column.getValue(i));
+        }
+        return copyValues;
     }
 
     @Override
@@ -210,7 +249,7 @@ public class TableImpl implements Table {
 
     private Table selectTopDown(int beginIndex, int endIndex) {
         Table table = selectOneRow(beginIndex);
-        for(int i = beginIndex + 1; i <= endIndex; i++) {
+        for (int i = beginIndex + 1; i <= endIndex; i++) {
             table = union(table, selectOneRow(i));
         }
         return table;
@@ -218,7 +257,7 @@ public class TableImpl implements Table {
 
     private Table selectBottomUp(int beginIndex, int endIndex) {
         Table table = selectOneRow(beginIndex);
-        for(int i = beginIndex - 1; i >= endIndex; i--) {
+        for (int i = beginIndex - 1; i >= endIndex; i--) {
             table = union(table, selectOneRow(i));
         }
         return table;
@@ -249,10 +288,21 @@ public class TableImpl implements Table {
         for (int i = 0; i < one.count(); i++) {
             copyValues.add(one.getValue(i));
         }
-        for(int i = 0; i < another.count(); i++) {
+        for (int i = 0; i < another.count(); i++) {
             copyValues.add(another.getValue(i));
         }
         return new ColumnImpl(one.getHeader(), copyValues);
+    }
+
+    public Column concatColumn(String name, Column one, Column another) {
+        List<String> copyValues = new ArrayList<>();
+        for (int i = 0; i < one.count(); i++) {
+            copyValues.add(one.getValue(i));
+        }
+        for (int i = 0; i < another.count(); i++) {
+            copyValues.add(another.getValue(i));
+        }
+        return new ColumnImpl(name, copyValues);
     }
 
     private void validateSameColumnSize(Table one, Table another) {
@@ -264,7 +314,7 @@ public class TableImpl implements Table {
     @Override
     public Table selectRowsAt(int... indices) {
         Table newTable = selectOneRow(indices[0]);
-        for(int i = 1; i < indices.length; i ++) {
+        for (int i = 1; i < indices.length; i++) {
             newTable = union(newTable, selectOneRow(indices[i]));
         }
         return newTable;
@@ -310,7 +360,7 @@ public class TableImpl implements Table {
         return columns.stream()
                 .filter(column -> column.getHeader().equals(name))
                 .findAny()
-                .orElseThrow(()->new IllegalArgumentException("can't find column"));
+                .orElseThrow(() -> new IllegalArgumentException("can't find column"));
     }
 
     @Override

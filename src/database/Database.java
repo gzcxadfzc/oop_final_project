@@ -10,7 +10,7 @@ public class Database {
 
     // 테이블 이름 목록을 출력한다.
     public static void showTables() {
-
+        tables.forEach(table -> System.out.println(table.getName()));
     }
 
     /**
@@ -30,10 +30,10 @@ public class Database {
             String delimiter = ",";
             String line;
             List<List<String>> data = new ArrayList<>();
-            while((line = bufferedReader.readLine()) != null) {
-                String[] values = line.split(delimiter,-1);
-                if(data.isEmpty()) {
-                    for(int i = 0; i < values.length; i ++) {
+            while ((line = bufferedReader.readLine()) != null) {
+                String[] values = line.split(delimiter, -1);
+                if (data.isEmpty()) {
+                    for (int i = 0; i < values.length; i++) {
                         data.add(new ArrayList<>());
                     }
                 }
@@ -44,7 +44,9 @@ public class Database {
             List<Column> columns = data.stream()
                     .map(value -> new ColumnImpl(value.get(0), value.subList(1, value.size())))
                     .collect(Collectors.toList());
-            tables.add(new TableImpl(csv.getName(), columns));
+            String tableName = csv.getName()
+                    .substring(0, csv.getName().length() - 4);
+            tables.add(new TableImpl(tableName, columns));
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {

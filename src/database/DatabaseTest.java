@@ -19,10 +19,10 @@ class DatabaseTest {
         Database.createTable(new File("rsc/editors.csv"));
         Database.createTable(new File("rsc/translators.csv"));
         Database.createTable(new File("rsc/books.csv"));
-        Database.getTable("authors.csv").show();
-        Database.getTable("editors.csv").show();
-        Database.getTable("translators.csv").show();
-        Database.getTable("books.csv").show();
+        Database.getTable("authors").show();
+        Database.getTable("editors").show();
+        Database.getTable("translators").show();
+        Database.getTable("books").show();
     }
 
     @Test

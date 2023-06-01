@@ -2,6 +2,8 @@ package database;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 class TableImplTest {
@@ -12,8 +14,19 @@ class TableImplTest {
     private final Column column5 = new ColumnImpl("header", List.of("1", "", "3", "2.0", "5", "6", "7", "8", "9", "10"));
     private final Table table = new TableImpl("table", List.of(column, column2, column3, column4, column5));
 
+    private void createTables() throws FileNotFoundException {
+        Database.createTable(new File("rsc/authors.csv"));
+        Database.createTable(new File("rsc/editors.csv"));
+        Database.createTable(new File("rsc/translators.csv"));
+        Database.createTable(new File("rsc/books.csv"));
+    }
+
     @Test
-    void crossJoin() {
+    void crossJoin() throws FileNotFoundException {
+        createTables();
+        Database.getTable("books")
+                .crossJoin(Database.getTable("authors"))
+                .show();
     }
 
     @Test
