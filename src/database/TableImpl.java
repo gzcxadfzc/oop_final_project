@@ -1,5 +1,7 @@
 package database;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -106,7 +108,37 @@ public class TableImpl implements Table {
 
     @Override
     public Table innerJoin(Table rightTable, List<JoinColumn> joinColumns) {
-        return null;
+        List<Table> innerJoinRows = new ArrayList<>();
+        for (int leftColumnIndex = 0; leftColumnIndex < entrySize; leftColumnIndex++) {
+            for (int rightColumnIndex = 0; rightColumnIndex < rightTable.getRowCount(); rightColumnIndex++) {
+                boolean isMatch = true;
+                for (JoinColumn joinColumn : joinColumns) {
+                    Column leftColumn = this.getColumn(joinColumn.getColumnOfThisTable());
+                    Column rightColumn = rightTable.getColumn(joinColumn.getColumnOfAnotherTable());
+                    String value = leftColumn.getValue(leftColumnIndex);
+                    if (!value.equals(rightColumn.getValue(rightColumnIndex))) {
+                        isMatch = false;
+                    }
+                }
+                if (isMatch) {
+                    Table leftRow = this.selectRowsAt(leftColumnIndex);
+                    Table rightRow = rightTable.selectRowsAt(rightColumnIndex);
+                    innerJoinRows.add(leftRow.crossJoin(rightRow));
+                }
+            }
+        }
+        if (!innerJoinRows.isEmpty()) {
+            Table newTable = innerJoinRows.get(0);
+            for (int i = 1; i < innerJoinRows.size(); i++) {
+                newTable = union(newTable, innerJoinRows.get(i));
+            }
+            return newTable;
+        }
+        Table empty = selectRowsAt(0).crossJoin(rightTable.selectRowsAt(0));
+        for (int i = 0; i < empty.getColumnCount(); i++) {
+            empty.getColumn(i).setValue(0, "");
+        }
+        return empty;
     }
 
     @Override
@@ -345,6 +377,20 @@ public class TableImpl implements Table {
 
     @Override
     public <T> Table selectRowsBy(String columnName, Predicate<T> predicate) {
+/*        Column targetColumn = getColumn(columnName);
+        List<Integer> rowIndices = new ArrayList<>();
+        for (int i = 0; i < targetColumn.count(); i++) {
+            if (predicate.test(targetColumn.getValue(i))) {
+                rowIndices.add(i);
+            }
+        }
+        Table newTable = selectOneRow(rowIndices.get(0));
+        for (int i = 1; i < rowIndices.size(); i++) {
+            newTable = union(newTable, selectOneRow(rowIndices.get(i)));
+        }
+        Predicate<String> predicate1 = (Predicate<String>) predicate;
+
+        return newTable;*/
         return null;
     }
 

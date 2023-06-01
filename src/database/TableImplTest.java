@@ -19,6 +19,9 @@ class TableImplTest {
         Database.createTable(new File("rsc/editors.csv"));
         Database.createTable(new File("rsc/translators.csv"));
         Database.createTable(new File("rsc/books.csv"));
+        Database.createTable(new File("rsc/innerjoin1.csv"));
+        Database.createTable(new File("rsc/innerjoin2.csv"));
+
     }
 
     @Test
@@ -30,11 +33,32 @@ class TableImplTest {
     }
 
     @Test
-    void innerJoin() {
+    void innerJoin() throws FileNotFoundException {
+        createTables();
+        Table books = Database.getTable("books");
+        Table authors = Database.getTable("authors");
+        Table editors = Database.getTable("editors");
+        Table translators = Database.getTable("translators");
+
+        Table testTable = books;
+        Table rightTable = authors;
+        Table inner1 = Database.getTable("innerjoin1");
+        Table inner2 = Database.getTable("innerjoin2");
+
+        Table innerJoined = testTable.innerJoin(rightTable, List.of(new JoinColumn("author_id", "id")));
+        innerJoined.show();
+        Table innerJoined2 = inner1.innerJoin(testTable, List.of(new JoinColumn("id", "id"),new JoinColumn("column3", "author_id")));
+        innerJoined2.show();
     }
 
     @Test
     void outerJoin() {
+        Table books = Database.getTable("books");
+        Table authors = Database.getTable("authors");
+        Table editors = Database.getTable("editors");
+        Table translators = Database.getTable("translators");
+
+        Table testTable = books;
     }
 
     @Test
