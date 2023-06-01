@@ -218,26 +218,30 @@ public class TableImpl implements Table {
 
     @Override
     public Table head() {
-        int lineCount = Math.min(columns.size(), DEFAULT_ROW_SIZE) - 1;
+        int lineCount = Math.min(columns.size(), DEFAULT_ROW_SIZE);
         return selectRows(0, lineCount);
     }
 
     @Override
     public Table head(int lineCount) {
-        lineCount = Math.min(lineCount, entrySize) - 1;
+        lineCount = Math.min(lineCount, entrySize);
         return selectRows(0, lineCount);
     }
 
     @Override
     public Table tail() {
-        int lastIndex = entrySize - 1;
-        return selectRows(lastIndex, lastIndex - DEFAULT_ROW_SIZE);
+        return selectTopDown(entrySize - DEFAULT_ROW_SIZE, entrySize);
     }
 
     @Override
     public Table tail(int lineCount) {
+        int indexOffset = lineCount - 1;
         int lastIndex = entrySize - 1;
-        return selectRows(lastIndex, lastIndex - lineCount);
+        int startIndex = lastIndex - indexOffset;
+        if (lineCount > entrySize) {
+            startIndex = 0;
+        }
+        return selectTopDown(startIndex, entrySize);
     }
 
     @Override
@@ -250,7 +254,7 @@ public class TableImpl implements Table {
 
     private Table selectTopDown(int beginIndex, int endIndex) {
         Table table = selectOneRow(beginIndex);
-        for (int i = beginIndex + 1; i <= endIndex; i++) {
+        for (int i = beginIndex + 1; i < endIndex; i++) {
             table = union(table, selectOneRow(i));
         }
         return table;
@@ -258,7 +262,7 @@ public class TableImpl implements Table {
 
     private Table selectBottomUp(int beginIndex, int endIndex) {
         Table table = selectOneRow(beginIndex);
-        for (int i = beginIndex - 1; i >= endIndex; i--) {
+        for (int i = beginIndex - 1; i > endIndex; i--) {
             table = union(table, selectOneRow(i));
         }
         return table;
