@@ -1,6 +1,7 @@
 package database;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -327,12 +328,19 @@ public class TableImpl implements Table {
 
     @Override
     public Table selectColumns(int beginIndex, int endIndex) {
-        return null;
+        List<Column> newColumns = columns.stream()
+                .skip(beginIndex)
+                .limit(endIndex - beginIndex)
+                .collect(Collectors.toList());
+        return new TableImpl(this.tableName, newColumns);
     }
 
     @Override
     public Table selectColumnsAt(int... indices) {
-        return null;
+        List<Column> newColumns = Arrays.stream(indices)
+                .mapToObj(columns::get)
+                .collect(Collectors.toList());
+        return new TableImpl(this.tableName, newColumns);
     }
 
     @Override
