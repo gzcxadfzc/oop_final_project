@@ -2,6 +2,7 @@ package database;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 class ColumnImpl implements Column {
 
@@ -12,8 +13,8 @@ class ColumnImpl implements Column {
     private static final String INTEGER_REGEX = "[+-]?\\d+";
     private final String header;
     private final boolean isNumeric;
-    private List<String> data;
     private int cellSize;
+    private List<String> data;
 
     public ColumnImpl(String header, List<String> data) {
         this.header = header;
@@ -118,5 +119,18 @@ class ColumnImpl implements Column {
         return data.stream()
                 .filter(value -> value.matches(""))
                 .count();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ColumnImpl column = (ColumnImpl) o;
+        return Objects.equals(header, column.header);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(header);
     }
 }

@@ -218,12 +218,13 @@ public class TableImpl implements Table {
 
     @Override
     public Table head() {
-        int lineCount = Math.min(columns.size(), DEFAULT_ROW_SIZE);
+        int lineCount = Math.min(columns.size(), DEFAULT_ROW_SIZE) - 1;
         return selectRows(0, lineCount);
     }
 
     @Override
     public Table head(int lineCount) {
+        lineCount = Math.min(lineCount, entrySize) - 1;
         return selectRows(0, lineCount);
     }
 
