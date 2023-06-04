@@ -103,15 +103,15 @@ public class Test {
         Table innerJoined = testTable.innerJoin(rightTable, List.of(new JoinColumn("author_id", "id")));
         innerJoined.show();
 
-//        rightTable = translators;
+        rightTable = translators;
 
 //        17) outer join
-//        Table outerJoined = testTable.outerJoin(rightTable, List.of(new JoinColumn("translator_id", "id")));
-//        outerJoined.show();
+        Table outerJoined = testTable.outerJoin(rightTable, List.of(new JoinColumn("translator_id", "id")));
+        outerJoined.show();
 
 //        18) full outer join
-//        Table fullOuterJoined = testTable.fullOuterJoin(rightTable, List.of(new JoinColumn("translator_id", "id")));
-//        fullOuterJoined.show();
+        Table fullOuterJoined = testTable.fullOuterJoin(rightTable, List.of(new JoinColumn("translator_id", "id")));
+        fullOuterJoined.show();
 
 //        19) 조건식을 만족하는 행을 얻는다.
 //        testTable.selectRowsBy("title", (String x) -> x.contains("Your")).show();

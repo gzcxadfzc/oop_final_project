@@ -102,6 +102,16 @@ public class TableImpl implements Table {
 
     @Override
     public Table innerJoin(Table rightTable, List<JoinColumn> joinColumns) {
+        List<Table> innerJoinRows = getMatchRows(rightTable, joinColumns);
+        if (!innerJoinRows.isEmpty()) {
+            return unionTables(innerJoinRows);
+        }
+        Table emptyRowLeft = extractEmptyRow(this);
+        Table emptyRowRight = extractEmptyRow(rightTable);
+        return emptyRowLeft.crossJoin(emptyRowRight);
+    }
+
+    private List<Table> getMatchRows(Table rightTable, List<JoinColumn> joinColumns) {
         List<Table> innerJoinRows = new ArrayList<>();
         for (int leftColumnIndex = 0; leftColumnIndex < entrySize; leftColumnIndex++) {
             for (int rightColumnIndex = 0; rightColumnIndex < rightTable.getRowCount(); rightColumnIndex++) {
@@ -121,25 +131,83 @@ public class TableImpl implements Table {
                 }
             }
         }
-        if (!innerJoinRows.isEmpty()) {
-            Table newTable = unionTables(innerJoinRows);
-            return newTable;
+        return innerJoinRows;
+    }
+
+    private Table extractEmptyRow(Table table) {
+        Table row = table.selectRowsAt(0);
+        for (int i = 0; i < row.getColumnCount(); i++) {
+            row.getColumn(i).setValue(0, "");
         }
-        Table empty = selectRowsAt(0).crossJoin(rightTable.selectRowsAt(0));
-        for (int i = 0; i < empty.getColumnCount(); i++) {
-            empty.getColumn(i).setValue(0, "");
-        }
-        return empty;
+        return row;
     }
 
     @Override
     public Table outerJoin(Table rightTable, List<JoinColumn> joinColumns) {
-        return null;
+        List<Table> outerJoinRows = getOuterJoinRows(rightTable, joinColumns);
+        return unionTables(outerJoinRows);
+    }
+
+    private List<Table> getOuterJoinRows(Table rightTable, List<JoinColumn> joinColumns) {
+        List<Table> matchRows = new ArrayList<>();
+        List<Table> noMatchRows = new ArrayList<>();
+        for (int leftColumnIndex = 0; leftColumnIndex < entrySize; leftColumnIndex++) {
+            boolean hasMatchInRightColumn = false;
+            for (int rightColumnIndex = 0; rightColumnIndex < rightTable.getRowCount(); rightColumnIndex++) {
+                boolean isAllMatchInJoinColumns = true;
+                for (JoinColumn joinColumn : joinColumns) {
+                    Column leftColumn = this.getColumn(joinColumn.getColumnOfThisTable());
+                    Column rightColumn = rightTable.getColumn(joinColumn.getColumnOfAnotherTable());
+                    String value = leftColumn.getValue(leftColumnIndex);
+                    if (!value.equals(rightColumn.getValue(rightColumnIndex))) {
+                        isAllMatchInJoinColumns = false;
+                    }
+                }
+                if (isAllMatchInJoinColumns) {
+                    Table leftRow = this.selectRowsAt(leftColumnIndex);
+                    Table rightRow = rightTable.selectRowsAt(rightColumnIndex);
+                    matchRows.add(leftRow.crossJoin(rightRow));
+                    hasMatchInRightColumn = true;
+                }
+            }
+            if (!hasMatchInRightColumn) {
+                Table leftRow = this.selectRowsAt(leftColumnIndex);
+                Table rightRow = extractEmptyRow(rightTable);
+                noMatchRows.add(leftRow.crossJoin(rightRow));
+            }
+        }
+        matchRows.addAll(noMatchRows);
+        return matchRows;
     }
 
     @Override
     public Table fullOuterJoin(Table rightTable, List<JoinColumn> joinColumns) {
-        return null;
+        List<Table> tables = new ArrayList<>();
+        tables.add(outerJoin(rightTable, joinColumns));
+        List<JoinColumn> swappedJoinColumns = joinColumns.stream()
+                .map(JoinColumn::getSwoppedJoinColumn)
+                .collect(Collectors.toList());
+        Table swapped = rightTable.outerJoin(this, swappedJoinColumns);
+        swapped = reverseColumn(swapped);
+        tables.add(swapped);
+        Table unionTable = unionTables(tables);
+        return removeOverlap(unionTable);
+    }
+
+    private Table reverseColumn(Table table) {
+        List<Column> reverseColumns = new ArrayList<>();
+        for (int i = table.getColumnCount() - 1; i >= 0; i--) {
+            reverseColumns.add(table.getColumn(i));
+        }
+        return new TableImpl(table.getName(), reverseColumns);
+    }
+
+    private Table removeOverlap(Table table) {
+        Set<Table> tables = new LinkedHashSet<>();
+        for(int i = 0; i < table.getRowCount(); i++) {
+            tables.add(table.selectRowsAt(i));
+        }
+        return unionTables(new ArrayList<>(tables));
     }
 
     @Override
@@ -292,14 +360,14 @@ public class TableImpl implements Table {
         return table;
     }
 
-    public Table selectOneRow(int index) {
+    private Table selectOneRow(int index) {
         List<Column> copyColumns = columns.stream()
                 .map(column -> new ColumnImpl(column.getHeader(), List.of(column.getValue(index))))
                 .collect(Collectors.toList());
         return new TableImpl(this.getName(), copyColumns);
     }
 
-    public Table union(Table one, Table another) {
+    private Table union(Table one, Table another) {
         validateSameColumnSize(one, another);
         List<Column> newColumns = new ArrayList<>();
         for (int i = 0; i < one.getColumnCount(); i++) {
@@ -478,5 +546,18 @@ public class TableImpl implements Table {
     @Override
     public String toString() {
         return "<database.table@" + Integer.toHexString(hashCode()) + ">";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TableImpl table = (TableImpl) o;
+        return Objects.equals(columns, table.columns);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(columns, tableName);
     }
 }

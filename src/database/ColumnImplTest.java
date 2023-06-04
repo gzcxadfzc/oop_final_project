@@ -2,7 +2,9 @@ package database;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 class ColumnImplTest {
@@ -83,6 +85,17 @@ class ColumnImplTest {
         long expected = 2L;
         long actual = column.getNullCount();
         assertEquals(expected,actual);
+    }
+
+    @Test
+    void testEquals() {
+        Column column = new ColumnImpl(TEST_NAME, NULL_DATA);
+        Column column2 = new ColumnImpl(TEST_NAME, NULL_DATA);
+        Set<Column> columns = new HashSet<>();
+        columns.add(column);
+        columns.add(column2);
+        System.out.println(column);
+        assertEquals(column,column2);
     }
 
 }

@@ -4,7 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
 
 class TableImplTest {
     private final Column column = new ColumnImpl("id", List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"));
@@ -47,22 +51,47 @@ class TableImplTest {
 
         Table innerJoined = testTable.innerJoin(rightTable, List.of(new JoinColumn("author_id", "id")));
         innerJoined.show();
-        Table innerJoined2 = inner1.innerJoin(testTable, List.of(new JoinColumn("id", "id"),new JoinColumn("column3", "author_id")));
+        Table innerJoined2 = inner1.innerJoin(testTable, List.of(new JoinColumn("id", "id"),new JoinColumn("column1", "author_id")));
         innerJoined2.show();
     }
 
     @Test
-    void outerJoin() {
+    void outerJoin() throws FileNotFoundException {
+        createTables();
         Table books = Database.getTable("books");
         Table authors = Database.getTable("authors");
         Table editors = Database.getTable("editors");
         Table translators = Database.getTable("translators");
 
         Table testTable = books;
+        Table rightTable = translators;
+
+        Table outerJoined = testTable.outerJoin(rightTable, List.of(new JoinColumn("translator_id", "id")));
+        outerJoined.show();
     }
 
     @Test
-    void fullOuterJoin() {
+    void fullOuterJoin() throws FileNotFoundException {
+        createTables();
+        Table books = Database.getTable("books");
+        Table authors = Database.getTable("authors");
+        Table editors = Database.getTable("editors");
+        Table translators = Database.getTable("translators");
+
+        Table testTable = books;
+        Table rightTable = translators;
+
+        Table fullOuterJoined = testTable.fullOuterJoin(rightTable, List.of(new JoinColumn("translator_id", "id")));
+        fullOuterJoined.show();
+//        Set<Table> tables = new HashSet<>();
+//        for(int i =0; i < fullOuterJoined.getRowCount(); i++) {
+//            Table table = fullOuterJoined.selectRowsAt(i);
+//            tables.add(table);
+//            System.out.println(table.hashCode());
+//        }
+//        for (Table table1 : tables) {
+//            table1.show();
+//        }
     }
 
     @Test
@@ -101,7 +130,7 @@ class TableImplTest {
 /*        tableImpl.selectOneRow(3).show();
         tableImpl.selectOneRow(2).show();
         tableImpl.concatColumn(column2, column2).show();*/
-        tableImpl.union(tableImpl.selectOneRow(3), tableImpl.selectOneRow(2)).show();
+//        tableImpl.union(tableImpl.selectOneRow(3), tableImpl.selectOneRow(2)).show();
     }
 
     @Test
@@ -161,5 +190,20 @@ class TableImplTest {
 
     @Test
     void testGetColumn() {
+    }
+
+    @Test
+    void testEquals() {
+        Column c1 = new ColumnImpl("any1", List.of("1","1"));
+        Column c2 = new ColumnImpl("any", List.of("1","1"));
+
+        Table table3 = new TableImpl("a", List.of(c1, c2));
+        System.out.println(table3.selectRowsAt(0));
+        System.out.println(table3.selectRowsAt(1));
+        assertEquals(table3.selectRowsAt(0), table3.selectRowsAt(1));
+        Set<Table> tables = new HashSet<>();
+        tables.add(table3.selectRowsAt(0));
+        tables.add(table3.selectRowsAt(1));
+        System.out.println(tables);
     }
 }
