@@ -126,11 +126,11 @@ class ColumnImpl implements Column {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ColumnImpl column = (ColumnImpl) o;
-        return Objects.equals(header, column.header);
+        return Objects.equals(header, column.header) && Objects.equals(data, column.data);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(header);
+        return Objects.hash(header, data);
     }
 }

@@ -390,8 +390,15 @@ public class TableImpl implements Table {
         List<Table> rowList = splitToRows(this);
         List<Table> nullList = getNullRows(byIndexOfColumn, rowList);
         Table nullTable = unionTables(nullList);
-        Table sortedTable;
-        sortedTable = sortTableWithoutNull(byIndexOfColumn, isAscending, rowList);
+        Table sortedTable = sortTableWithoutNull(byIndexOfColumn, isAscending, rowList);
+        Table union = unionNulltoTop(isNullFirst, nullTable, sortedTable);
+        for (int i = 0; i < columns.size(); i++) {
+            this.columns.set(i, union.getColumn(i));
+        }
+        return this;
+    }
+
+    private Table unionNulltoTop(boolean isNullFirst, Table nullTable, Table sortedTable) {
         if (isNullFirst) {
             return union(nullTable, sortedTable);
         }

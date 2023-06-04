@@ -30,6 +30,16 @@ class DatabaseTest {
     }
 
     @Test
-    void sort() {
+    void sort() throws FileNotFoundException{
+        createTable();
+        Table testTable = Database.getTable("books");
+        Table sortedTable;
+        testTable.sort(5, true, false).show();
+        sortedTable = testTable.sort(5, true, false);
+        System.out.println("identity test for sort(index, asc, nullOrder): " + (!testTable.equals(sortedTable) ? "Fail" : "Pass"));
+
+        Database.sort(testTable, 5, false, true).show();
+        sortedTable = Database.sort(testTable, 5, false, true);
+        System.out.println("identity test for Database.sort(index, asc, nullOrder): " + (testTable.equals(sortedTable) ? "Fail" : "Pass"));
     }
 }
