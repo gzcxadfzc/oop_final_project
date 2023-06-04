@@ -127,7 +127,23 @@ class TableImplTest {
     }
 
     @Test
-    void sort() {
+    void sort() throws FileNotFoundException {
+        createTables();
+        Table books = Database.getTable("books");
+        Table authors = Database.getTable("authors");
+        Table editors = Database.getTable("editors");
+        Table translators = Database.getTable("translators");
+
+        Table testTable = books;
+        Table rightTable = authors;
+        Table sortedTable;
+        testTable.sort(5, false, true).show();
+        sortedTable = testTable.sort(5, true, false);
+        System.out.println("identity test for sort(index, asc, nullOrder): " + (!testTable.equals(sortedTable) ? "Fail" : "Pass"));
+
+        Database.sort(testTable, 5, false, true).show();
+        sortedTable = Database.sort(testTable, 5, false, true);
+        System.out.println("identity test for Database.sort(index, asc, nullOrder): " + (testTable.equals(sortedTable) ? "Fail" : "Pass"));
     }
 
     @Test

@@ -1,14 +1,8 @@
 package database;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class TableImpl implements Table {
 
@@ -128,10 +122,7 @@ public class TableImpl implements Table {
             }
         }
         if (!innerJoinRows.isEmpty()) {
-            Table newTable = innerJoinRows.get(0);
-            for (int i = 1; i < innerJoinRows.size(); i++) {
-                newTable = union(newTable, innerJoinRows.get(i));
-            }
+            Table newTable = unionTables(innerJoinRows);
             return newTable;
         }
         Table empty = selectRowsAt(0).crossJoin(rightTable.selectRowsAt(0));
@@ -396,7 +387,62 @@ public class TableImpl implements Table {
 
     @Override
     public Table sort(int byIndexOfColumn, boolean isAscending, boolean isNullFirst) {
-        return null;
+        List<Table> rowList = splitToRows(this);
+        List<Table> nullList = getNullRows(byIndexOfColumn, rowList);
+        Table nullTable = unionTables(nullList);
+        Table sortedTable;
+        sortedTable = sortTableWithoutNull(byIndexOfColumn, isAscending, rowList);
+        if (isNullFirst) {
+            return union(nullTable, sortedTable);
+        }
+        return union(sortedTable, nullTable);
+    }
+
+    private Table sortTableWithoutNull(int byIndexOfColumn, boolean isAscending, List<Table> rowList) {
+        if (isAscending) {
+            return ascendingSort(byIndexOfColumn, rowList);
+        }
+        return reversedSort(byIndexOfColumn, rowList);
+    }
+
+    private List<Table> splitToRows(Table table) {
+        List<Table> rowList = new ArrayList<>();
+        for (int i = 0; i < entrySize; i++) {
+            rowList.add(table.selectRowsAt(i));
+        }
+        return rowList;
+    }
+
+    private static List<Table> getNullRows(int byIndexOfColumn, List<Table> rowList) {
+        return rowList.stream()
+                .filter(table -> table.getColumn(byIndexOfColumn).getValue(0).equals(""))
+                .collect(Collectors.toList());
+    }
+
+    private Table ascendingSort(int byIndexOfColumn, List<Table> rowList) {
+        List<Table> sortedRows = rowList.stream()
+                .filter(table -> !table.getColumn(byIndexOfColumn).getValue(0).equals(""))
+                .sorted(Comparator.comparing(a -> a.getColumn(byIndexOfColumn).getValue(0)))
+                .collect(Collectors.toList());
+        sortedRows.get(0).getColumn(byIndexOfColumn).getValue(0);
+        return unionTables(sortedRows);
+    }
+
+    private Table reversedSort(int byIndexOfColumn, List<Table> rowList) {
+        List<Table> sortedRows = rowList.stream()
+                .filter(table -> !table.getColumn(byIndexOfColumn).getValue(0).equals(""))
+                .sorted(Comparator.comparing(a -> a.getColumn(byIndexOfColumn).getValue(0), Comparator.reverseOrder()))
+                .collect(Collectors.toList());
+        sortedRows.get(0).getColumn(byIndexOfColumn).getValue(0);
+        return unionTables(sortedRows);
+    }
+
+    private Table unionTables(List<Table> tables) {
+        Table unionTables = tables.get(0);
+        for (int i = 1; i < tables.size(); i++) {
+            unionTables = union(unionTables, tables.get(i));
+        }
+        return unionTables;
     }
 
     @Override
