@@ -79,19 +79,12 @@ class TableImplTest {
         Table translators = Database.getTable("translators");
 
         Table testTable = books;
-        Table rightTable = translators;
+        Table rightTable = authors;
 
-        Table fullOuterJoined = testTable.fullOuterJoin(rightTable, List.of(new JoinColumn("translator_id", "id")));
+        testTable.show();
+        rightTable.show();
+        Table fullOuterJoined = testTable.fullOuterJoin(rightTable, List.of(new JoinColumn("author_id", "id")));
         fullOuterJoined.show();
-//        Set<Table> tables = new HashSet<>();
-//        for(int i =0; i < fullOuterJoined.getRowCount(); i++) {
-//            Table table = fullOuterJoined.selectRowsAt(i);
-//            tables.add(table);
-//            System.out.println(table.hashCode());
-//        }
-//        for (Table table1 : tables) {
-//            table1.show();
-//        }
     }
 
     @Test
@@ -114,8 +107,19 @@ class TableImplTest {
     }
 
     @Test
-    void head2() {
-        table.head(2).show();
+    void head2() throws FileNotFoundException {
+        createTables();
+        Table books = Database.getTable("books");
+        Table authors = Database.getTable("authors");
+        Table editors = Database.getTable("editors");
+        Table translators = Database.getTable("translators");
+        Table testTable;
+        Table headTable;
+        testTable = books;
+        testTable.head(10).show();
+        headTable = testTable.head(10);
+        System.out.println("identity test for head(n): " + (testTable.equals(headTable) ? "Fail" : "Pass"));
+        testTable.equals(headTable);
     }
 
     @Test

@@ -39,11 +39,13 @@ public class Test {
         testTable.head().show();
         headTable = testTable.head();
         System.out.println("identity test for head(): " + (testTable.equals(headTable) ? "Fail" : "Pass"));
+        System.out.println(testTable.hashCode() + " , " + headTable.hashCode());
 
 //        6) 지정한 처음 n줄 출력 (새 테이블)
         testTable.head(10).show();
         headTable = testTable.head(10);
         System.out.println("identity test for head(n): " + (testTable.equals(headTable) ? "Fail" : "Pass"));
+        System.out.println(testTable.hashCode() + " , " + headTable.hashCode());
 
         Table tailTable;
 
@@ -125,36 +127,36 @@ public class Test {
         String selectedColumnName;
 
 //        20) setValue(int index, int value) or setValue(int index, String value)호출 전후 비교
-//        System.out.println("*** before setValue ***");
-//        selectedColumnIndex = (int) (Math.random() * testTable.getColumnCount());
-//        selectedRowIndex = (int) (Math.random() * testTable.getColumn(selectedColumnIndex).count());
-//        selectedColumnName = testTable.getColumn(selectedColumnIndex).getHeader();
-//        System.out.println("Selected Column: " + selectedColumnName);
-//        testTable.selectRowsAt(selectedRowIndex).show();
-//        testTable.describe();
-//        if (testTable.getColumn(selectedColumnIndex).isNumericColumn())
-//            testTable.getColumn(selectedColumnName).setValue(selectedRowIndex, "Sample");
-//        else
-//            testTable.getColumn(selectedColumnName).setValue(selectedRowIndex, "2023");
-//        System.out.println("Column " + selectedColumnName + " has been changed");
-//        System.out.println("*** after setValue ***");
-//        testTable.selectRowsAt(selectedRowIndex).show();
-//        testTable.describe();
+        System.out.println("*** before setValue ***");
+        selectedColumnIndex = (int) (Math.random() * testTable.getColumnCount());
+        selectedRowIndex = (int) (Math.random() * testTable.getColumn(selectedColumnIndex).count());
+        selectedColumnName = testTable.getColumn(selectedColumnIndex).getHeader();
+        System.out.println("Selected Column: " + selectedColumnName);
+        testTable.selectRowsAt(selectedRowIndex).show();
+        testTable.describe();
+        if (testTable.getColumn(selectedColumnIndex).isNumericColumn())
+            testTable.getColumn(selectedColumnName).setValue(selectedRowIndex, "Sample");
+        else
+            testTable.getColumn(selectedColumnName).setValue(selectedRowIndex, "2023");
+        System.out.println("Column " + selectedColumnName + " has been changed");
+        System.out.println("*** after setValue ***");
+        testTable.selectRowsAt(selectedRowIndex).show();
+        testTable.describe();
 
 //        21) T getValue(int index, Class<T> t) or String getValue(int index) 호출 전후 비교
-//        System.out.println("*** before getValue ***");
-//        selectedColumnIndex = (int) (Math.random() * testTable.getColumnCount());
-//        selectedRowIndex = (int) (Math.random() * testTable.getColumn(selectedColumnIndex).count());
-//        selectedColumnName = testTable.getColumn(selectedColumnIndex).getHeader();
-//        System.out.println("Selected Column: " + selectedColumnName);
-//        testTable.selectRowsAt(selectedRowIndex).show();
-//        if (testTable.getColumn(selectedColumnIndex).isNumericColumn()) {
-//            // cell 값이 null이면, 예외 발생할 수 있음.
-//            double value = testTable.getColumn(selectedColumnName).getValue(selectedRowIndex, Double.class);
-//            System.out.println("The numeric value in (" + selectedRowIndex + ", " + selectedColumnIndex + ") is " + value);
-//        } else {
-//            String value = testTable.getColumn(selectedColumnName).getValue(selectedRowIndex);
-//            System.out.println("The string value in (" + selectedRowIndex + ", " + selectedColumnIndex + ") is " + value);
-//        }
+        System.out.println("*** before getValue ***");
+        selectedColumnIndex = (int) (Math.random() * testTable.getColumnCount());
+        selectedRowIndex = (int) (Math.random() * testTable.getColumn(selectedColumnIndex).count());
+        selectedColumnName = testTable.getColumn(selectedColumnIndex).getHeader();
+        System.out.println("Selected Column: " + selectedColumnName);
+        testTable.selectRowsAt(selectedRowIndex).show();
+        if (testTable.getColumn(selectedColumnIndex).isNumericColumn()) {
+            // cell 값이 null이면, 예외 발생할 수 있음.
+            double value = testTable.getColumn(selectedColumnName).getValue(selectedRowIndex, Double.class);
+            System.out.println("The numeric value in (" + selectedRowIndex + ", " + selectedColumnIndex + ") is " + value);
+        } else {
+            String value = testTable.getColumn(selectedColumnName).getValue(selectedRowIndex);
+            System.out.println("The string value in (" + selectedRowIndex + ", " + selectedColumnIndex + ") is " + value);
+        }
     }
 }

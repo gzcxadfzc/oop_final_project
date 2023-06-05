@@ -183,13 +183,17 @@ public class TableImpl implements Table {
     @Override
     public Table fullOuterJoin(Table rightTable, List<JoinColumn> joinColumns) {
         List<Table> tables = new ArrayList<>();
-        tables.add(outerJoin(rightTable, joinColumns));
+        int innerJoinRowCount = this.innerJoin(rightTable, joinColumns).getRowCount();
+        tables.add(this.outerJoin(rightTable, joinColumns));
         List<JoinColumn> swappedJoinColumns = joinColumns.stream()
                 .map(JoinColumn::getSwoppedJoinColumn)
                 .collect(Collectors.toList());
-        Table swapped = rightTable.outerJoin(this, swappedJoinColumns);
-        swapped = reverseColumn(swapped);
-        tables.add(swapped);
+        Table rightOuterJoin = rightTable.outerJoin(this, swappedJoinColumns);
+        rightOuterJoin = reverseColumn(rightOuterJoin);
+        if (innerJoinRowCount < rightOuterJoin.getRowCount()) {
+            Table slicedRightOuterJoin = rightOuterJoin.selectRows(innerJoinRowCount, rightOuterJoin.getRowCount());
+            tables.add(slicedRightOuterJoin);
+        }
         Table unionTable = unionTables(tables);
         return removeOverlap(unionTable);
     }
@@ -204,7 +208,7 @@ public class TableImpl implements Table {
 
     private Table removeOverlap(Table table) {
         Set<Table> tables = new LinkedHashSet<>();
-        for(int i = 0; i < table.getRowCount(); i++) {
+        for (int i = 0; i < table.getRowCount(); i++) {
             tables.add(table.selectRowsAt(i));
         }
         return unionTables(new ArrayList<>(tables));
@@ -548,16 +552,16 @@ public class TableImpl implements Table {
         return "<database.table@" + Integer.toHexString(hashCode()) + ">";
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        TableImpl table = (TableImpl) o;
-        return Objects.equals(columns, table.columns);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(columns, tableName);
-    }
+//    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (o == null || getClass() != o.getClass()) return false;
+//        TableImpl table = (TableImpl) o;
+//        return Objects.equals(columns, table.columns);
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(columns, tableName);
+//    }
 }
