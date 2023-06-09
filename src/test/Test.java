@@ -17,7 +17,7 @@ public class Test {
         Database.createTable(new File("rsc/books.csv"));
 
 //        2) 데이터베이스의 테이블 목록을 출력
-//        Database.showTables();
+        Database.showTables();
 
 //        3) 데이터베이스로부터 테이블을 얻는다.
         Table books = Database.getTable("books");
@@ -116,10 +116,10 @@ public class Test {
         fullOuterJoined.show();
 
 //        19) 조건식을 만족하는 행을 얻는다.
-//        testTable.selectRowsBy("title", (String x) -> x.contains("Your")).show();
-//        testTable.selectRowsBy("author_id", (Integer x) -> x < 15).show();
-//        testTable.selectRowsBy("title", (String x) -> x.length() < 8).show();
-//        testTable.selectRowsBy("translator_id", (Object x) -> x == null).show();
+        testTable.selectRowsBy("title", (String x) -> x.contains("Your")).show();
+        testTable.selectRowsBy("author_id", (Integer x) -> x < 15).show();
+        testTable.selectRowsBy("title", (String x) -> x.length() < 8).show();
+        testTable.selectRowsBy("translator_id", (Object x) -> x == null).show();
 //
 //        ****************************** test for Column ******************************
         int selectedColumnIndex;

@@ -267,7 +267,6 @@ public class TableImpl implements Table {
         int columnCellSize = getLongestHeaderCellSize();
         int indexCellSize = columnCount / 10;
         System.out.println(this);
-        System.out.println(this.hashCode());
         System.out.println("Range Index: " + entryCount + " entries, 0 to " + (entryCount - 1));
         System.out.println("Data Columns (total " + columnCount + " columns) :");
         showDescribeHeader(indexCellSize, columnCellSize);
@@ -440,21 +439,46 @@ public class TableImpl implements Table {
 
     @Override
     public <T> Table selectRowsBy(String columnName, Predicate<T> predicate) {
-/*        Column targetColumn = getColumn(columnName);
-        List<Integer> rowIndices = new ArrayList<>();
-        for (int i = 0; i < targetColumn.count(); i++) {
-            if (predicate.test(targetColumn.getValue(i))) {
-                rowIndices.add(i);
-            }
+        Column targetColumn = getColumn(columnName);
+        List<Integer> rowIndices;
+        try {
+            rowIndices = createIndexIfMatch(predicate, targetColumn, false);
+        } catch (ClassCastException e) {
+            rowIndices = createIndexIfMatch(predicate, targetColumn, true);
+        }
+        if(rowIndices.isEmpty()) {
+            return extractEmptyRow(this);
         }
         Table newTable = selectOneRow(rowIndices.get(0));
         for (int i = 1; i < rowIndices.size(); i++) {
             newTable = union(newTable, selectOneRow(rowIndices.get(i)));
         }
-        Predicate<String> predicate1 = (Predicate<String>) predicate;
+        return newTable;
+    }
 
-        return newTable;*/
-        return null;
+    private <T> List<Integer> createIndexIfMatch(Predicate<T> predicate, Column targetColumn, boolean doCast) {
+        List<Integer> rowIndices = new ArrayList<>();
+        for (int i = 0; i < targetColumn.count(); i++) {
+            Object columnValue;
+            if(doCast) {
+                columnValue = targetColumn.getValue(i, Integer.class);
+            } else {
+                columnValue = getValueOrNull(targetColumn, i);
+            }
+            if (predicate.test((T) columnValue)) {
+                rowIndices.add(i);
+            }
+        }
+        return rowIndices;
+    }
+
+    private Object getValueOrNull(Column targetColumn, int i) {
+        Object columnValue;
+        columnValue = targetColumn.getValue(i);
+        if(columnValue.equals("")) {
+            return null;
+        }
+        return columnValue;
     }
 
     @Override
@@ -551,17 +575,4 @@ public class TableImpl implements Table {
     public String toString() {
         return "<database.table@" + Integer.toHexString(hashCode()) + ">";
     }
-
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        TableImpl table = (TableImpl) o;
-//        return Objects.equals(columns, table.columns);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(columns, tableName);
-//    }
 }

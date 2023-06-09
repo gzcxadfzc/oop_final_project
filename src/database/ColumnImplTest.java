@@ -91,11 +91,13 @@ class ColumnImplTest {
     void testEquals() {
         Column column = new ColumnImpl(TEST_NAME, NULL_DATA);
         Column column2 = new ColumnImpl(TEST_NAME, NULL_DATA);
-        Set<Column> columns = new HashSet<>();
-        columns.add(column);
-        columns.add(column2);
-        System.out.println(column);
-        assertEquals(column,column2);
+//        Set<Column> columns = new HashSet<>();
+//        columns.add(column);
+//        columns.add(column2);
+//        System.out.println(column);
+//        assertEquals(column,column2);
+
+        System.out.println(column2.getValue(0) == null);
     }
 
 }

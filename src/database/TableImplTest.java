@@ -156,7 +156,18 @@ class TableImplTest {
     }
 
     @Test
-    void selectRowsBy() {
+    void selectRowsBy() throws FileNotFoundException{
+        createTables();
+        Table books = Database.getTable("books");
+        Table authors = Database.getTable("authors");
+        Table editors = Database.getTable("editors");
+        Table translators = Database.getTable("translators");
+
+        Table testTable = books;
+        testTable.selectRowsBy("title", (String x) -> x.contains("Your")).show();
+        testTable.selectRowsBy("author_id", (Integer x) -> x < 15).show();
+        testTable.selectRowsBy("title", (String x) -> x.length() < 8).show();
+        testTable.selectRowsBy("translator_id", (Object x) -> x == null).show();
     }
 
     @Test

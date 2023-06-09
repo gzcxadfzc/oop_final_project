@@ -3,6 +3,7 @@ package database;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 class ColumnImpl implements Column {
 
@@ -15,12 +16,20 @@ class ColumnImpl implements Column {
     private final boolean isNumeric;
     private int cellSize;
     private List<String> data;
+    private List<String> nullData;
 
     public ColumnImpl(String header, List<String> data) {
         this.header = header;
         this.data = data;
+        this.nullData = createNullContainList(data);
         this.isNumeric = isAllInteger(data);
         this.cellSize = findLongestLength();
+    }
+
+    private List<String> createNullContainList(List<String> data) {
+        return data.stream()
+                .map(s -> s.equals("") ? null : s)
+                .collect(Collectors.toList());
     }
 
     private int findLongestLength() {
@@ -34,7 +43,7 @@ class ColumnImpl implements Column {
 
     private boolean isAllInteger(List<String> data) {
         int numericCount = (int) data.stream()
-                .filter(value -> value.matches(INTEGER_REGEX))
+                .filter(value -> value.matches(INTEGER_REGEX) || value.equals(""))
                 .count();
         return numericCount == data.size();
     }
@@ -126,8 +135,7 @@ class ColumnImpl implements Column {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ColumnImpl column = (ColumnImpl) o;
-        boolean isEqual = Objects.equals(header, column.header) && Objects.equals(data, column.data);
-        return isEqual;
+        return Objects.equals(header, column.header) && Objects.equals(data, column.data);
     }
 
     @Override
